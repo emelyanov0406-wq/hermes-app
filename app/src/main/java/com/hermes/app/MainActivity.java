@@ -4,6 +4,11 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
@@ -15,12 +20,23 @@ public class MainActivity extends AppCompatActivity {
     private WebView webView;
     private ValueCallback<Uri[]> filePathCallback;
     private static final int FILECHOOSER_RESULTCODE = 1;
+    
+    private final String URL_HERMES = "http://192.168.0.129:5001";
+    private final String URL_GIGA = "http://192.168.0.129:5000";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        
+        Spinner spinner = new Spinner(this);
+        String[] brains = {"Hermes (Инженер)", "Giga (Художник)"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, brains);
+        spinner.setAdapter(adapter);
+        
         webView = new WebView(this);
-        setContentView(webView);
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
@@ -44,7 +60,28 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        webView.loadUrl("http://192.168.0.129:5001");
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (position == 0) {
+                    webView.loadUrl(URL_HERMES);
+                } else {
+                    webView.loadUrl(URL_GIGA);
+                }
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
+        layout.addView(spinner);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 
+                LinearLayout.LayoutParams.MATCH_PARENT);
+        webView.setLayoutParams(params);
+        layout.addView(webView);
+        
+        setContentView(layout);
+        webView.loadUrl(URL_HERMES);
     }
 
     @Override
