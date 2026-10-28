@@ -5,9 +5,11 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.net.http.SslError;
 import android.os.Bundle;
 import android.view.View;
 import android.webkit.PermissionRequest;
+import android.webkit.SslErrorHandler;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
@@ -26,33 +28,39 @@ public class MainActivity extends AppCompatActivity {
     private ValueCallback<Uri[]> filePathCallback;
     private static final int FILECHOOSER_RESULTCODE = 1;
     private static final int MY_PERMISSIONS_REQUEST_RECORD_AUDIO = 101;
-    
+
     private final String URL_HERMES = "http://192.168.0.129:5001";
-    private final String URL_GIGA = "http://192.168.0.129:5000";
+    private final String URL_GIGA = "https://192.168.0.129:5000"; // HTTPS!
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
-        // Запрос разрешения на микрофон
+
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, MY_PERMISSIONS_REQUEST_RECORD_AUDIO);
         }
 
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
-        
+
         Spinner spinner = new Spinner(this);
         String[] brains = {"Hermes (Инженер)", "Giga (Художник)"};
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, brains);
         spinner.setAdapter(adapter);
-        
+
         webView = new WebView(this);
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
-        webView.setWebViewClient(new WebViewClient());
-        
+        webSettings.setMediaPlaybackRequiresUserGesture(false); // Разрешаем автовоспроизведение и захват
+
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+                handler.proceed(); // Игнорируем ошибку самоподписанного сертификата
+            }
+        });
+
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
             public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
@@ -70,15 +78,9 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
 
-            // Обработчик запроса на микрофон от WebView
             @Override
             public void onPermissionRequest(final PermissionRequest request) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        request.grant(request.getResources());
-                    }
-                });
+                runOnUiThread(() -> request.grant(request.getResources()));
             }
         });
 
@@ -97,11 +99,11 @@ public class MainActivity extends AppCompatActivity {
 
         layout.addView(spinner);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, 
+                LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.MATCH_PARENT);
         webView.setLayoutParams(params);
         layout.addView(webView);
-        
+
         setContentView(layout);
         webView.loadUrl(URL_HERMES);
     }
