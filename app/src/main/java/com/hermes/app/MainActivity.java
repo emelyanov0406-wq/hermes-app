@@ -30,7 +30,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int MY_PERMISSIONS_REQUEST_RECORD_AUDIO = 101;
 
     private final String URL_HERMES = "http://192.168.0.129:5001";
-    private final String URL_GIGA = "https://192.168.0.129:5000"; // HTTPS!
+    private final String URL_GIGA = "https://192.168.0.129:5000/?token=BondsSecretKey2026"; // HTTPS!
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
