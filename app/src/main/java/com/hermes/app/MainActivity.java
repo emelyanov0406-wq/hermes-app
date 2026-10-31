@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int FILECHOOSER_RESULTCODE = 1;
     private static final int MY_PERMISSIONS_REQUEST_RECORD_AUDIO = 101;
 
-    private final String URL_HERMES = "http://192.168.0.129:5001";
+    private final String URL_HERMES = "http://192.168.0.129:5001/?token=BondsSecretKey2026";
     private final String URL_GIGA = "https://192.168.0.129:5000/?token=BondsSecretKey2026"; // HTTPS!
 
     @Override
