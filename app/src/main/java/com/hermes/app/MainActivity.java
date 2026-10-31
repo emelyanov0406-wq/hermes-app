@@ -30,7 +30,9 @@ public class MainActivity extends AppCompatActivity {
     private static final int MY_PERMISSIONS_REQUEST_RECORD_AUDIO = 101;
 
     private final String URL_HERMES = "http://192.168.0.129:5001/?token=BondsSecretKey2026";
-    private final String URL_GIGA = "https://192.168.0.129:5000/?token=BondsSecretKey2026"; // HTTPS!
+    private final String URL_GIGA = "https://192.168.0.129:5000/?token=BondsSecretKey2026";
+    private final String URL_EVA = "http://192.168.0.129:5002";
+    private final String URL_COUNCIL = "https://192.168.0.129:5004/?token=BondsSecretKey2026";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
         layout.setOrientation(LinearLayout.VERTICAL);
 
         Spinner spinner = new Spinner(this);
-        String[] brains = {"Hermes (Инженер)", "Giga (Художник)"};
+        String[] brains = {"Hermes (Инженер)", "Giga (Художник)", "Eva (Подруга)", "Совет (Оркестратор)"};
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, brains);
         spinner.setAdapter(adapter);
 
@@ -52,12 +54,12 @@ public class MainActivity extends AppCompatActivity {
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
-        webSettings.setMediaPlaybackRequiresUserGesture(false); // Разрешаем автовоспроизведение и захват
+        webSettings.setMediaPlaybackRequiresUserGesture(false);
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
-                handler.proceed(); // Игнорируем ошибку самоподписанного сертификата
+                handler.proceed();
             }
         });
 
@@ -89,8 +91,12 @@ public class MainActivity extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (position == 0) {
                     webView.loadUrl(URL_HERMES);
-                } else {
+                } else if (position == 1) {
                     webView.loadUrl(URL_GIGA);
+                } else if (position == 2) {
+                    webView.loadUrl(URL_EVA);
+                } else {
+                    webView.loadUrl(URL_COUNCIL);
                 }
             }
             @Override
