@@ -31,7 +31,6 @@ public class MainActivity extends AppCompatActivity {
 
     private final String URL_HERMES = "http://192.168.0.129:5001/?token=BondsSecretKey2026";
     private final String URL_GIGA = "https://192.168.0.129:5000/?token=BondsSecretKey2026";
-    private final String URL_EVA = "http://192.168.0.129:5002";
     private final String URL_COUNCIL = "https://192.168.0.129:5004/?token=BondsSecretKey2026";
 
     @Override
@@ -46,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
         layout.setOrientation(LinearLayout.VERTICAL);
 
         Spinner spinner = new Spinner(this);
-        String[] brains = {"Hermes (Инженер)", "Giga (Художник)", "Eva (Подруга)", "Совет (Оркестратор)"};
+        String[] brains = {"Hermes (Инженер)", "Giga (Художник)", "Совет (Оркестратор)"};
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, brains);
         spinner.setAdapter(adapter);
 
@@ -93,8 +92,6 @@ public class MainActivity extends AppCompatActivity {
                     webView.loadUrl(URL_HERMES);
                 } else if (position == 1) {
                     webView.loadUrl(URL_GIGA);
-                } else if (position == 2) {
-                    webView.loadUrl(URL_EVA);
                 } else {
                     webView.loadUrl(URL_COUNCIL);
                 }
