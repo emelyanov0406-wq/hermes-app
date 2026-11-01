@@ -36,6 +36,29 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 public class MainActivity extends AppCompatActivity {
+
+    public class WebAppInterface {
+        public void saveImage(String base64Image) {
+            try {
+                String base64 = base64Image.substring(base64Image.indexOf(",") + 1);
+                byte[] decodedBytes = Base64.decode(base64, Base64.DEFAULT);
+                ContentValues values = new ContentValues();
+                values.put(MediaStore.MediaColumns.DISPLAY_NAME, "Giga_Art_" + System.currentTimeMillis() + ".jpg");
+                values.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
+                values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
+                Uri uri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+                if (uri != null) {
+                    OutputStream outputStream = getContentResolver().openOutputStream(uri);
+                    outputStream.write(decodedBytes);
+                    outputStream.close();
+                    runOnUiThread(() -> Toast.makeText(MainActivity.this, "Сохранено в Загрузки!", Toast.LENGTH_LONG).show());
+                }
+            } catch (Exception e) {
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "Ошибка: " + e.getMessage(), Toast.LENGTH_LONG).show());
+            }
+        }
+    }
+
     private WebView webView;
     private ValueCallback<Uri[]> filePathCallback;
     private static final int FILECHOOSER_RESULTCODE = 1;
@@ -78,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
         spinner.setBackgroundColor(Color.parseColor("#F4E8D1"));
 
         webView = new WebView(this);
+        webView.addJavascriptInterface(new WebAppInterface(), "Android");
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
