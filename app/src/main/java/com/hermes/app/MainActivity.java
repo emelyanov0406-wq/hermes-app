@@ -5,6 +5,9 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.graphics.Color;
+import android.widget.TextView;
+import android.view.ViewGroup;
 import android.net.http.SslError;
 import android.os.Bundle;
 import android.view.View;
@@ -46,8 +49,24 @@ public class MainActivity extends AppCompatActivity {
 
         Spinner spinner = new Spinner(this);
         String[] brains = {"Hermes (Инженер)", "Giga (Художник)", "Совет (Оркестратор)"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, brains);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, brains) {
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                View v = super.getView(position, convertView, parent);
+                ((TextView) v).setTextColor(Color.parseColor("#2B2B2B"));
+                v.setBackgroundColor(Color.parseColor("#F4E8D1"));
+                return v;
+            }
+            @Override
+            public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                View v = super.getDropDownView(position, convertView, parent);
+                ((TextView) v).setTextColor(Color.parseColor("#2B2B2B"));
+                v.setBackgroundColor(Color.parseColor("#F4E8D1"));
+                return v;
+            }
+        };
         spinner.setAdapter(adapter);
+        spinner.setBackgroundColor(Color.parseColor("#F4E8D1"));
 
         webView = new WebView(this);
         WebSettings webSettings = webView.getSettings();
