@@ -2,42 +2,48 @@ package com.hermes.app;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.graphics.Color;
-import android.widget.TextView;
-import android.view.ViewGroup;
 import android.net.http.SslError;
 import android.os.Bundle;
-import android.content.ContentValues;
+import android.os.Environment;
 import android.provider.MediaStore;
-import java.io.OutputStream;
+import android.util.Base64;
 import android.view.View;
+import android.webkit.JavascriptInterface;
+import android.webkit.JsResult;
 import android.webkit.PermissionRequest;
 import android.webkit.SslErrorHandler;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.webkit.DownloadListener;
-import android.util.Base64;
-import java.io.File;
-import java.io.FileOutputStream;
-import android.os.Environment;
-import android.widget.Toast;
 import android.webkit.WebSettings;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import java.io.OutputStream;
+
 public class MainActivity extends AppCompatActivity {
+    private WebView webView;
+    private ValueCallback<Uri[]> filePathCallback;
+    private static final int FILECHOOSER_RESULTCODE = 1;
+    private static final int MY_PERMISSIONS_REQUEST_RECORD_AUDIO = 101;
+
+    private final String URL_HERMES = "http://192.168.0.129:5001/?token=BondsSecretKey2026";
+    private final String URL_GIGA = "https://192.168.0.129:5000/?token=BondsSecretKey2026";
+    private final String URL_COUNCIL = "https://192.168.0.129:5004/?token=BondsSecretKey2026";
 
     public class WebAppInterface {
+        @JavascriptInterface
         public void saveImage(String base64Image) {
             try {
                 String base64 = base64Image.substring(base64Image.indexOf(",") + 1);
@@ -51,22 +57,14 @@ public class MainActivity extends AppCompatActivity {
                     OutputStream outputStream = getContentResolver().openOutputStream(uri);
                     outputStream.write(decodedBytes);
                     outputStream.close();
-                    runOnUiThread(() -> Toast.makeText(MainActivity.this, "Сохранено в Загрузки!", Toast.LENGTH_LONG).show());
+                    runOnUiThread(() -> Toast.makeText(MainActivity.this, "✅ Сохранено в Загрузки!", Toast.LENGTH_LONG).show());
                 }
             } catch (Exception e) {
-                runOnUiThread(() -> Toast.makeText(MainActivity.this, "Ошибка: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                final String err = e.getMessage();
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "❌ Ошибка: " + err, Toast.LENGTH_LONG).show());
             }
         }
     }
-
-    private WebView webView;
-    private ValueCallback<Uri[]> filePathCallback;
-    private static final int FILECHOOSER_RESULTCODE = 1;
-    private static final int MY_PERMISSIONS_REQUEST_RECORD_AUDIO = 101;
-
-    private final String URL_HERMES = "http://192.168.0.129:5001/?token=BondsSecretKey2026";
-    private final String URL_GIGA = "https://192.168.0.129:5000/?token=BondsSecretKey2026";
-    private final String URL_COUNCIL = "https://192.168.0.129:5004/?token=BondsSecretKey2026";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,56 +79,16 @@ public class MainActivity extends AppCompatActivity {
 
         Spinner spinner = new Spinner(this);
         String[] brains = {"Hermes (Инженер)", "Giga (Художник)", "Совет (Оркестратор)"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, brains) {
-            @Override
-            public View getView(int position, View convertView, ViewGroup parent) {
-                View v = super.getView(position, convertView, parent);
-                ((TextView) v).setTextColor(Color.parseColor("#2B2B2B"));
-                v.setBackgroundColor(Color.parseColor("#F4E8D1"));
-                return v;
-            }
-            @Override
-            public View getDropDownView(int position, View convertView, ViewGroup parent) {
-                View v = super.getDropDownView(position, convertView, parent);
-                ((TextView) v).setTextColor(Color.parseColor("#2B2B2B"));
-                v.setBackgroundColor(Color.parseColor("#F4E8D1"));
-                return v;
-            }
-        };
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, brains);
         spinner.setAdapter(adapter);
-        spinner.setBackgroundColor(Color.parseColor("#F4E8D1"));
 
         webView = new WebView(this);
         webView.addJavascriptInterface(new WebAppInterface(), "Android");
+        
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
         webSettings.setMediaPlaybackRequiresUserGesture(false);
-
-        webView.setDownloadListener(new DownloadListener() {
-            public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
-                if (url.startsWith("data:image")) {
-                    try {
-                        String base64 = url.substring(url.indexOf(",") + 1);
-                        byte[] decodedBytes = Base64.decode(base64, Base64.DEFAULT);
-                        
-                        ContentValues values = new ContentValues();
-                        values.put(MediaStore.MediaColumns.DISPLAY_NAME, "Giga_Art_" + System.currentTimeMillis() + ".jpg");
-                        values.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
-                        values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
-                        
-                        Uri uri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
-                        if (uri != null) {
-                            OutputStream outputStream = getContentResolver().openOutputStream(uri);
-                            outputStream.write(decodedBytes);
-                            outputStream.close();
-                        }
-                    } catch (Exception e) {
-                        Toast.makeText(MainActivity.this, "❌ Ошибка: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                }
-            }
-        });
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
@@ -159,6 +117,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPermissionRequest(final PermissionRequest request) {
                 runOnUiThread(() -> request.grant(request.getResources()));
+            }
+
+            @Override
+            public boolean onJsAlert(WebView view, String url, String message, JsResult result) {
+                Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
+                result.confirm();
+                return true;
             }
         });
 
