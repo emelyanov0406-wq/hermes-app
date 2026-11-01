@@ -10,6 +10,9 @@ import android.widget.TextView;
 import android.view.ViewGroup;
 import android.net.http.SslError;
 import android.os.Bundle;
+import android.content.ContentValues;
+import android.provider.MediaStore;
+import java.io.OutputStream;
 import android.view.View;
 import android.webkit.PermissionRequest;
 import android.webkit.SslErrorHandler;
@@ -86,12 +89,20 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         String base64 = url.substring(url.indexOf(",") + 1);
                         byte[] decodedBytes = Base64.decode(base64, Base64.DEFAULT);
-                        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "Giga_Art_" + System.currentTimeMillis() + ".jpg");
-                        FileOutputStream fos = new FileOutputStream(file);
-                        fos.write(decodedBytes);
-                        fos.close();
+                        
+                        ContentValues values = new ContentValues();
+                        values.put(MediaStore.MediaColumns.DISPLAY_NAME, "Giga_Art_" + System.currentTimeMillis() + ".jpg");
+                        values.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
+                        values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
+                        
+                        Uri uri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+                        if (uri != null) {
+                            OutputStream outputStream = getContentResolver().openOutputStream(uri);
+                            outputStream.write(decodedBytes);
+                            outputStream.close();
+                        }
                     } catch (Exception e) {
-                        Toast.makeText(MainActivity.this, "❌ Ошибка сохранения", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "❌ Ошибка: " + e.getMessage(), Toast.LENGTH_LONG).show();
                     }
                 }
             }
