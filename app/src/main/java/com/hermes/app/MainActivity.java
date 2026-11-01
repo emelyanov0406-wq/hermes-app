@@ -17,6 +17,12 @@ import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.DownloadListener;
+import android.util.Base64;
+import java.io.File;
+import java.io.FileOutputStream;
+import android.os.Environment;
+import android.widget.Toast;
 import android.webkit.WebSettings;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -73,6 +79,23 @@ public class MainActivity extends AppCompatActivity {
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
         webSettings.setMediaPlaybackRequiresUserGesture(false);
+
+        webView.setDownloadListener(new DownloadListener() {
+            public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
+                if (url.startsWith("data:image")) {
+                    try {
+                        String base64 = url.substring(url.indexOf(",") + 1);
+                        byte[] decodedBytes = Base64.decode(base64, Base64.DEFAULT);
+                        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "Giga_Art_" + System.currentTimeMillis() + ".jpg");
+                        FileOutputStream fos = new FileOutputStream(file);
+                        fos.write(decodedBytes);
+                        fos.close();
+                    } catch (Exception e) {
+                        Toast.makeText(MainActivity.this, "❌ Ошибка сохранения", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        });
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
