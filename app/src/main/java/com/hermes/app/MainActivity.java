@@ -1,9 +1,7 @@
 package com.hermes.app;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.ContentValues;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.net.http.SslError;
@@ -11,26 +9,18 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Base64;
-import android.view.View;
 import android.webkit.JavascriptInterface;
-import android.webkit.JsResult;
 import android.webkit.PermissionRequest;
-import android.webkit.SslErrorHandler;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.webkit.WebSettings;
-import android.webkit.DownloadListener;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
-import android.widget.Spinner;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-
 import java.io.OutputStream;
 
 public class MainActivity extends AppCompatActivity {
@@ -39,9 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int FILECHOOSER_RESULTCODE = 1;
     private static final int MY_PERMISSIONS_REQUEST_RECORD_AUDIO = 101;
 
-    private final String URL_HERMES = "http://192.168.0.129:5001/?token=BondsSecretKey2026";
-    private final String URL_GIGA = "https://192.168.0.129:5000/?token=BondsSecretKey2026";
-    private final String URL_COUNCIL = "https://192.168.0.129:5004/?token=BondsSecretKey2026";
+    private final String URL_MAIN = "http://192.168.0.129:5001/?token=BondsSecretKey2026";
 
     public class WebAppInterface {
         @JavascriptInterface
@@ -77,109 +65,35 @@ public class MainActivity extends AppCompatActivity {
 
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
-
-        Spinner spinner = new Spinner(this);
-        String[] brains = {"Hermes (Инженер)", "Giga (Художник)", "Совет (Оркестратор)"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, brains);
-        spinner.setAdapter(adapter);
+        layout.setLayoutParams(new LinearLayout.LayoutParams(-1, -1));
 
         webView = new WebView(this);
-        webView.addJavascriptInterface(new WebAppInterface(), "Android");
+        webView.setLayoutParams(new LinearLayout.LayoutParams(-1, -1));
         
-        WebSettings webSettings = webView.getSettings();
-        webSettings.setJavaScriptEnabled(true);
-        webSettings.setDomStorageEnabled(true);
-        webSettings.setMediaPlaybackRequiresUserGesture(false);
+        WebSettings settings = webView.getSettings();
+        settings.setJavaScriptEnabled(true);
+        settings.setDomStorageEnabled(true);
+        settings.setAllowFileAccess(true);
+        settings.setMediaPlaybackRequiresUserGesture(false);
+        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
 
-        // Слушатель скачиваний (открывает Chrome)
-        webView.setDownloadListener(new DownloadListener() {
-            @Override
-            public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
-                Intent i = new Intent(Intent.ACTION_VIEW);
-                i.setData(Uri.parse(url));
-                startActivity(i);
-            }
-        });
-
+        webView.addJavascriptInterface(new WebAppInterface(), "Android");
         webView.setWebViewClient(new WebViewClient() {
             @Override
-            public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+            public void onReceivedSslError(WebView view, android.webkit.SslErrorHandler handler, SslError error) {
                 handler.proceed();
             }
         });
-
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
-            public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
-                if (MainActivity.this.filePathCallback != null) {
-                    MainActivity.this.filePathCallback.onReceiveValue(null);
-                }
-                MainActivity.this.filePathCallback = filePathCallback;
-                Intent intent = fileChooserParams.createIntent();
-                try {
-                    startActivityForResult(intent, FILECHOOSER_RESULTCODE);
-                } catch (Exception e) {
-                    MainActivity.this.filePathCallback = null;
-                    return false;
-                }
-                return true;
-            }
-
-            @Override
             public void onPermissionRequest(final PermissionRequest request) {
-                runOnUiThread(() -> request.grant(request.getResources()));
-            }
-
-            @Override
-            public boolean onJsAlert(WebView view, String url, String message, JsResult result) {
-                Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
-                result.confirm();
-                return true;
+                request.grant(request.getResources());
             }
         });
 
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (position == 0) {
-                    webView.loadUrl(URL_HERMES);
-                } else if (position == 1) {
-                    webView.loadUrl(URL_GIGA);
-                } else {
-                    webView.loadUrl(URL_COUNCIL);
-                }
-            }
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
-        });
-
-        layout.addView(spinner);
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT);
-        webView.setLayoutParams(params);
+        webView.loadUrl(URL_MAIN);
         layout.addView(webView);
-
         setContentView(layout);
-        webView.loadUrl(URL_HERMES);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == FILECHOOSER_RESULTCODE) {
-            if (filePathCallback == null) return;
-            Uri[] results = null;
-            if (resultCode == Activity.RESULT_OK && data != null) {
-                String dataString = data.getDataString();
-                if (dataString != null) {
-                    results = new Uri[]{Uri.parse(dataString)};
-                }
-            }
-            filePathCallback.onReceiveValue(results);
-            filePathCallback = null;
-        } else {
-            super.onActivityResult(requestCode, resultCode, data);
-        }
     }
 
     @Override
