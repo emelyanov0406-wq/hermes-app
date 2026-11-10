@@ -89,11 +89,49 @@ public class MainActivity extends AppCompatActivity {
             public void onPermissionRequest(final PermissionRequest request) {
                 request.grant(request.getResources());
             }
+            
+            @Override
+            public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
+                if (MainActivity.this.filePathCallback != null) {
+                    MainActivity.this.filePathCallback.onReceiveValue(null);
+                }
+                MainActivity.this.filePathCallback = filePathCallback;
+                Intent intent = fileChooserParams.createIntent();
+                intent.setType("image/*");
+                try {
+                    startActivityForResult(intent, FILECHOOSER_RESULTCODE);
+                } catch (Exception e) {
+                    MainActivity.this.filePathCallback = null;
+                    return false;
+                }
+                return true;
+            }
         });
 
         webView.loadUrl(URL_MAIN);
         layout.addView(webView);
         setContentView(layout);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == FILECHOOSER_RESULTCODE) {
+            if (null == filePathCallback) return;
+            Uri[] results = null;
+            if (resultCode == Activity.RESULT_OK) {
+                if (data == null) {
+                    results = new Uri[]{Uri.parse("")};
+                } else {
+                    String dataString = data.getDataString();
+                    if (dataString != null) {
+                        results = new Uri[]{Uri.parse(dataString)};
+                    }
+                }
+            }
+            filePathCallback.onReceiveValue(results);
+            filePathCallback = null;
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
