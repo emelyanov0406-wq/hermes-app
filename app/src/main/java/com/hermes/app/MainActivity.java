@@ -74,6 +74,8 @@ public class MainActivity extends AppCompatActivity {
         
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
+        settings.setCacheMode(WebSettings.LOAD_NO_CACHE); // Отключаем кэш, чтобы всегда грузить свежий код
+        settings.setDomStorageEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setAllowFileAccess(true);
         settings.setMediaPlaybackRequiresUserGesture(false);
