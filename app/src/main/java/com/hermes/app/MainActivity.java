@@ -1,6 +1,7 @@
 package com.hermes.app;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
