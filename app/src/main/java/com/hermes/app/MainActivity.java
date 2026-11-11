@@ -112,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        webView.loadUrl(URL_MAIN);
+        webView.loadUrl(URL_MAIN + "&t=" + System.currentTimeMillis());
         layout.addView(webView);
         setContentView(layout);
     }
